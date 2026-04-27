@@ -1,0 +1,141 @@
+.page {
+  min-height: calc(100vh - 64px);
+  background: var(--sand);
+  padding: 40px 0 64px;
+}
+
+.pageHeader {
+  margin-bottom: 28px;
+}
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  color: var(--charcoal);
+  font-weight: 500;
+}
+.subtitle {
+  color: var(--warm-grey);
+  font-size: 0.95rem;
+  margin-top: 4px;
+}
+
+/* ── Filter Bar ───────────────────────────────────────────────────────────── */
+.filterBar {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--sand-dark);
+  margin-bottom: 32px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.filterBarInner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  flex-wrap: wrap;
+}
+
+.typeButtons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.typeBtn {
+  padding: 7px 14px;
+  border-radius: 100px;
+  border: 1.5px solid var(--sand-dark);
+  background: var(--white);
+  color: var(--warm-grey);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.typeBtn:hover       { border-color: var(--terra-light); color: var(--terra); }
+.typeBtnActive       { border-color: var(--terra); background: var(--terra); color: var(--white); }
+
+.filterActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Extended Filters Panel ───────────────────────────────────────────────── */
+.filtersPanel {
+  border-top: 1px solid var(--light-grey);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: var(--sand);
+  animation: fadeIn 0.2s ease both;
+}
+
+.filtersGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.geoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  border: 1px solid var(--sand-dark);
+}
+
+.geoTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+
+.geoRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 140px;
+  gap: 12px;
+}
+
+.coordsInfo {
+  font-size: 0.82rem;
+  color: var(--forest);
+  font-weight: 500;
+}
+
+/* ── Results ──────────────────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.loadingWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 80px 24px;
+  color: var(--warm-grey);
+  font-size: 0.95rem;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .filtersGrid { grid-template-columns: 1fr 1fr; }
+  .geoRow      { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .filtersGrid { grid-template-columns: 1fr; }
+  .geoRow      { grid-template-columns: 1fr; }
+  .typeButtons  { gap: 4px; }
+  .typeBtn      { font-size: 0.76rem; padding: 6px 10px; }
+}

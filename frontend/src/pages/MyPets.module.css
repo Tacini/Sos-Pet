@@ -1,0 +1,95 @@
+.page {
+  min-height: calc(100vh - 64px);
+  background: var(--sand);
+  padding: 48px 0 64px;
+}
+
+.loadingPage {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 36px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  color: var(--charcoal);
+  font-weight: 500;
+}
+.subtitle { color: var(--warm-grey); margin-top: 4px; }
+
+/* ── List ─────────────────────────────────────────────────────────────────── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.petCard {
+  background: var(--white);
+  border: 1px solid var(--sand-dark);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  transition: all var(--transition);
+  animation: fadeUp 0.35s ease both;
+}
+.petCard:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.petPhoto {
+  width: 88px;
+  height: 88px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--light-grey);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.petPhoto img { width: 100%; height: 100%; object-fit: cover; }
+.petEmoji     { font-size: 2.5rem; }
+
+.petInfo { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+
+.petTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.petName {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--charcoal);
+}
+.petMeta     { font-size: 0.88rem; color: var(--warm-grey); }
+.petLocation { font-size: 0.85rem; color: var(--warm-grey); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.petTime     { font-size: 0.8rem; color: #bbb; }
+
+.petActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .petCard    { flex-direction: column; align-items: flex-start; }
+  .petActions { flex-direction: row; flex-wrap: wrap; width: 100%; }
+}

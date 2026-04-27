@@ -1,0 +1,189 @@
+/* ── Hero ──────────────────────────────────────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, #2D5016 0%, #3D6B1F 50%, #C4622D 100%);
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 60px;
+}
+
+.heroInner {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 80px 24px 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 48px;
+}
+
+.heroText { display: flex; flex-direction: column; gap: 20px; }
+
+.heroPill {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.9);
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  width: fit-content;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.heroTitle {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  color: var(--white);
+  font-weight: 300;
+  line-height: 1.15;
+}
+.heroTitle em {
+  font-style: italic;
+  font-weight: 500;
+  color: #F5C17A;
+}
+
+.heroDesc {
+  color: rgba(255,255,255,0.8);
+  font-size: 1.05rem;
+  max-width: 420px;
+  line-height: 1.7;
+}
+
+.heroActions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ── Illustration ─────────────────────────────────────────────────────────── */
+.heroIllustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 260px;
+}
+.heroBubble {
+  position: absolute;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  width: 140px;
+  height: 140px;
+  animation: float 4s ease-in-out infinite;
+}
+.bubbleCat {
+  top: 10px;
+  right: 10px;
+  width: 100px;
+  height: 100px;
+  font-size: 2.5rem;
+  animation-delay: -1.5s;
+}
+.bubbleSmall {
+  bottom: 20px;
+  left: 30px;
+  width: 70px;
+  height: 70px;
+  font-size: 1.8rem;
+  animation-delay: -3s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+/* ── Wave ─────────────────────────────────────────────────────────────────── */
+.heroWave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: var(--sand);
+  clip-path: ellipse(55% 100% at 50% 100%);
+}
+
+/* ── CTA Section ──────────────────────────────────────────────────────────── */
+.ctaSection { padding: 64px 0; }
+
+.ctaGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.ctaCard {
+  background: var(--white);
+  border: 1px solid var(--sand-dark);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all var(--transition);
+}
+.ctaCard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+.ctaCardTerra { border-color: rgba(196,98,45,0.3); background: #FEF6EF; }
+
+.ctaIcon { font-size: 2rem; }
+.ctaCard h3 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--charcoal);
+}
+.ctaCard p { font-size: 0.9rem; color: var(--warm-grey); line-height: 1.6; flex: 1; }
+
+/* ── Feed ─────────────────────────────────────────────────────────────────── */
+.feedSection { padding: 64px 0; }
+.feedDark    { background: var(--light-grey); }
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.loadingWrap {
+  display: flex;
+  justify-content: center;
+  padding: 64px;
+}
+
+/* ── Footer ───────────────────────────────────────────────────────────────── */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  font-size: 0.82rem;
+  color: var(--warm-grey);
+  border-top: 1px solid var(--sand-dark);
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .heroInner        { grid-template-columns: 1fr; padding-top: 60px; }
+  .heroIllustration { display: none; }
+  .ctaGrid          { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .sectionHeader { flex-direction: column; gap: 12px; }
+  .heroActions   { flex-direction: column; }
+}

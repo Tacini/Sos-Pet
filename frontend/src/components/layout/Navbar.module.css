@@ -1,0 +1,103 @@
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(245, 239, 224, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--sand-dark);
+}
+
+.inner {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--terra);
+  transition: opacity var(--transition);
+}
+.logo:hover { opacity: 0.8; }
+.logo svg   { color: var(--terra); }
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--warm-grey);
+  transition: all var(--transition);
+}
+.link:hover  { background: var(--light-grey); color: var(--charcoal); }
+.active      { color: var(--terra); background: rgba(196,98,45,0.08); }
+
+.authBtns { display: flex; gap: 8px; align-items: center; }
+
+.userMenu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 8px;
+}
+.userName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--charcoal);
+  padding: 8px;
+  border-radius: var(--radius-sm);
+}
+.hamburger:hover { background: var(--light-grey); }
+
+.mobileMenu {
+  background: var(--white);
+  border-top: 1px solid var(--sand-dark);
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  gap: 4px;
+}
+.mobileLink {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  color: var(--charcoal);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.mobileLink:hover { background: var(--light-grey); }
+
+@media (max-width: 768px) {
+  .links    { display: none; }
+  .hamburger { display: block; }
+}

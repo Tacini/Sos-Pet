@@ -1,0 +1,148 @@
+/* ── Button ─────────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: all var(--transition);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--terra);
+  color: var(--white);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--terra-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(196,98,45,0.35);
+}
+
+.btn-secondary {
+  background: var(--forest-light);
+  color: var(--forest);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: #d9e9d0;
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--terra);
+  border: 2px solid var(--terra);
+}
+.btn-outline:hover:not(:disabled) {
+  background: var(--terra);
+  color: var(--white);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--warm-grey);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--light-grey);
+  color: var(--charcoal);
+}
+
+.btn-sm  { padding: 8px 16px;  font-size: 0.85rem; }
+.btn-md  { padding: 12px 24px; font-size: 0.95rem; }
+.btn-lg  { padding: 16px 32px; font-size: 1.05rem; }
+
+/* ── Fields ─────────────────────────────────────────────────────────────────── */
+.fieldGroup { display: flex; flex-direction: column; gap: 6px; }
+
+.label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--charcoal);
+  letter-spacing: 0.01em;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid var(--sand-dark);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  color: var(--charcoal);
+  font-size: 0.95rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+}
+.input:focus {
+  border-color: var(--terra);
+  box-shadow: 0 0 0 3px rgba(196,98,45,0.12);
+}
+.input::placeholder { color: #bbb; }
+.inputError { border-color: var(--error) !important; }
+.errorMsg { font-size: 0.82rem; color: var(--error); }
+.textarea { resize: vertical; min-height: 100px; }
+.select { appearance: none; cursor: pointer; }
+
+/* ── Badge ─────────────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.badge-default { background: var(--light-grey); color: var(--warm-grey); }
+.badge-terra   { background: #fde8da; color: var(--terra-dark); }
+.badge-forest  { background: var(--forest-light); color: var(--forest); }
+.badge-dog     { background: #FFF3CD; color: #856404; }
+.badge-cat     { background: #E8D5F5; color: #6A1B9A; }
+
+/* ── Spinner ─────────────────────────────────────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.spinner-sm { width: 16px; height: 16px; }
+.spinner-md { width: 24px; height: 24px; }
+.spinner-lg { width: 40px; height: 40px; border-width: 3px; }
+
+/* ── Card ─────────────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--sand-dark);
+  overflow: hidden;
+  transition: all var(--transition);
+}
+.cardClickable {
+  cursor: pointer;
+}
+.cardClickable:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--terra-light);
+}
+
+/* ── Empty ─────────────────────────────────────────────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 64px 24px;
+  text-align: center;
+}
+.emptyIcon { font-size: 3rem; }
+.emptyTitle { font-family: var(--font-display); font-size: 1.3rem; color: var(--warm-grey); }
+.emptyDesc  { font-size: 0.9rem; color: #aaa; max-width: 320px; }

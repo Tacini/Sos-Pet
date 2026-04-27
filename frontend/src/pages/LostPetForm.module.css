@@ -1,0 +1,172 @@
+.page {
+  min-height: calc(100vh - 64px);
+  background: var(--sand);
+  padding: 48px 24px;
+}
+
+.inner {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* ── Page Header ──────────────────────────────────────────────────────────── */
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+.headerIcon { color: var(--terra); }
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  color: var(--charcoal);
+  font-weight: 500;
+}
+.subtitle { color: var(--warm-grey); }
+
+/* ── Form ─────────────────────────────────────────────────────────────────── */
+.form { display: flex; flex-direction: column; gap: 24px; }
+
+/* ── Section ──────────────────────────────────────────────────────────────── */
+.section {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--sand-dark);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeUp 0.4s ease both;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--charcoal);
+  font-weight: 500;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--light-grey);
+}
+.sectionDesc { font-size: 0.88rem; color: var(--warm-grey); margin-top: -8px; }
+
+/* ── Grid ─────────────────────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ── Photos ───────────────────────────────────────────────────────────────── */
+.photoGrid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.photoThumb {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 2px solid var(--sand-dark);
+}
+.photoThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.removeBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.removeBtn:hover { background: var(--error); }
+
+.addPhoto {
+  width: 100px;
+  height: 100px;
+  border: 2px dashed var(--sand-dark);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--warm-grey);
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-align: center;
+  transition: all var(--transition);
+}
+.addPhoto:hover {
+  border-color: var(--terra);
+  color: var(--terra);
+  background: rgba(196,98,45,0.04);
+}
+.addPhoto svg { color: inherit; }
+
+/* ── Submit ───────────────────────────────────────────────────────────────── */
+.submitWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0 24px;
+}
+.submitNote {
+  font-size: 0.82rem;
+  color: var(--warm-grey);
+  text-align: center;
+}
+
+/* ── Success ──────────────────────────────────────────────────────────────── */
+.successPage {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: linear-gradient(160deg, var(--sand) 0%, var(--forest-light) 100%);
+}
+.successCard {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 64px 48px;
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+  animation: fadeUp 0.5s ease both;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.successIcon  { color: var(--forest); }
+.successTitle { font-family: var(--font-display); font-size: 2rem; color: var(--charcoal); }
+.successDesc  { color: var(--warm-grey); line-height: 1.7; }
+.successActions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+
+@media (max-width: 600px) {
+  .section { padding: 24px; }
+  .grid    { grid-template-columns: 1fr; }
+}
