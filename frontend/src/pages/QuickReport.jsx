@@ -4,17 +4,29 @@ import { useNavigate } from 'react-router-dom';
 import { Camera, MapPin, Phone, Upload, X, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { reportService } from '../services';
-import { Button, Input, Textarea, Select } from '../components/ui';
+import { Button, Input, Textarea } from '../components/ui';
 import styles from './QuickReport.module.css';
 
 const STEPS = ['Foto', 'Localização', 'Contato'];
 
+const CORES = ['Preto', 'Branco', 'Caramelo', 'Cinza', 'Marrom', 'Amarelo', 'Mesclado', 'Rajado'];
+
+const RACAS = {
+  dog: ['Vira-lata', 'Labrador', 'Golden Retriever', 'Poodle', 'Bulldog', 'Pastor Alemão', 'Shih Tzu', 'Outro'],
+  cat: ['Vira-lata', 'Siamês', 'Persa', 'Maine Coon', 'Angorá', 'Bengal', 'Ragdoll', 'Outro'],
+};
+
 export default function QuickReport() {
   const navigate = useNavigate();
-  const [step, setStep]           = useState(0);
-  const [photoFile, setPhotoFile] = useState(null);
+  const [step, setStep]                 = useState(0);
+  const [photoFile, setPhotoFile]       = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted]       = useState(false);
+  const [animalType, setAnimalType]     = useState('');
+  const [outroTipo, setOutroTipo]       = useState('');
+  const [coresSel, setCoresSel]         = useState([]);
+  const [racaSel, setRacaSel]           = useState('');
+  const [outraRaca, setOutraRaca]       = useState('');
   const fileInputRef = useRef();
 
   const {
@@ -33,47 +45,46 @@ export default function QuickReport() {
 
   const acceptsContact = watch('accepts_contact') === 'true';
 
+  const toggleCor = (cor) =>
+    setCoresSel((prev) =>
+      prev.includes(cor) ? prev.filter((c) => c !== cor) : [...prev, cor]
+    );
+
   const handlePhoto = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Foto muito grande. Máximo 5MB.');
-      return;
-    }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Foto muito grande. Máximo 5MB.'); return; }
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
   };
 
   const nextStep = async () => {
-    if (step === 0 && !photoFile) {
-      toast.error('Adicione uma foto do animal.');
-      return;
-    }
-    if (step === 1) {
-      const ok = await trigger(['location_text']);
-      if (!ok) return;
-    }
+    if (step === 0 && !photoFile) { toast.error('Adicione uma foto do animal.'); return; }
+    if (step === 1) { const ok = await trigger(['location_text']); if (!ok) return; }
     setStep((s) => s + 1);
   };
 
   const onSubmit = async (data) => {
     if (!photoFile) { toast.error('Foto obrigatória.'); return; }
 
+    const racaFinal = racaSel === 'Outro' ? outraRaca : racaSel;
+
     const formData = new FormData();
     formData.append('photo', photoFile);
 
     const fields = {
-      location_text: data.location_text,
-      latitude:      data.latitude,
-      longitude:     data.longitude,
-      city:          data.city,
-      neighborhood:  data.neighborhood,
-      animal_type:   data.animal_type,
-      animal_color:  data.animal_color,
-      description:   data.description,
-      reporter_name:  data.reporter_name,
-      reporter_phone: data.reporter_phone,
-      reporter_email: data.reporter_email,
+      location_text:   data.location_text,
+      latitude:        data.latitude,
+      longitude:       data.longitude,
+      city:            data.city,
+      neighborhood:    data.neighborhood,
+      animal_type:     animalType === 'other' ? outroTipo.trim() : animalType,
+      animal_color:    coresSel.join(', '),
+      breed:           racaFinal,
+      description:     data.description,
+      reporter_name:   data.reporter_name,
+      reporter_phone:  data.reporter_phone,
+      reporter_email:  data.reporter_email,
       accepts_contact: data.accepts_contact,
       wants_updates:   data.wants_updates,
       contact_methods: JSON.stringify(
@@ -103,10 +114,13 @@ export default function QuickReport() {
             Obrigado por ajudar! Seu relato pode fazer a diferença para uma família inteira.
           </p>
           <div className={styles.successActions}>
-            <Button variant="primary" onClick={() => navigate('/')}>
-              Voltar à página inicial
-            </Button>
-            <Button variant="outline" onClick={() => { setSubmitted(false); setStep(0); setPhotoFile(null); setPhotoPreview(null); }}>
+            <Button variant="primary" onClick={() => navigate('/')}>Voltar à página inicial</Button>
+            <Button variant="outline" onClick={() => {
+              setSubmitted(false); setStep(0);
+              setPhotoFile(null); setPhotoPreview(null);
+              setAnimalType(''); setOutroTipo('');
+              setCoresSel([]); setRacaSel(''); setOutraRaca('');
+            }}>
               Enviar outro relato
             </Button>
           </div>
@@ -118,7 +132,7 @@ export default function QuickReport() {
   return (
     <div className={styles.page}>
       <div className={styles.inner}>
-        {/* Header */}
+
         <div className={styles.pageHeader}>
           <span className={styles.pill}>📍 Sem login necessário</span>
           <h1 className={styles.title}>Vi um animal perdido</h1>
@@ -138,19 +152,14 @@ export default function QuickReport() {
           ))}
         </div>
 
-        {/* Form card */}
         <div className={styles.card}>
           <form onSubmit={handleSubmit(onSubmit)}>
 
-            {/* ── Passo 0: Foto ─────────────────────────────────────────── */}
+            {/* ── Passo 0: Foto ── */}
             {step === 0 && (
               <div className={styles.stepContent}>
-                <h2 className={styles.stepTitle}>
-                  <Camera size={20} /> Foto do animal
-                </h2>
-                <p className={styles.stepDesc}>
-                  Uma boa foto é essencial para identificar o animal.
-                </p>
+                <h2 className={styles.stepTitle}><Camera size={20} /> Foto do animal</h2>
+                <p className={styles.stepDesc}>Uma boa foto é essencial para identificar o animal.</p>
 
                 <div
                   className={`${styles.dropzone} ${photoPreview ? styles.dropzoneHasPhoto : ''}`}
@@ -159,11 +168,8 @@ export default function QuickReport() {
                   {photoPreview ? (
                     <>
                       <img src={photoPreview} alt="Preview" className={styles.preview} />
-                      <button
-                        type="button"
-                        className={styles.removePhoto}
-                        onClick={(e) => { e.stopPropagation(); setPhotoFile(null); setPhotoPreview(null); }}
-                      >
+                      <button type="button" className={styles.removePhoto}
+                        onClick={(e) => { e.stopPropagation(); setPhotoFile(null); setPhotoPreview(null); }}>
                         <X size={16} />
                       </button>
                     </>
@@ -176,26 +182,101 @@ export default function QuickReport() {
                   )}
                 </div>
 
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhoto}
-                  style={{ display: 'none' }}
-                />
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhoto} style={{ display: 'none' }} />
 
                 <div className={styles.optionalSection}>
                   <h3 className={styles.optionalLabel}>Informações opcionais do animal</h3>
-                  <div className={styles.twoCol}>
-                    <Select label="Tipo" {...register('animal_type')}>
-                      <option value="">Não sei</option>
-                      <option value="dog">Cachorro</option>
-                      <option value="cat">Gato</option>
-                      <option value="bird">Pássaro</option>
-                      <option value="other">Outro</option>
-                    </Select>
-                    <Input label="Cor" placeholder="ex: preto e branco" {...register('animal_color')} />
+
+                  {/* Tipo — radio button */}
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel}>Tipo</label>
+                    <div className={styles.radioRow}>
+                      {[
+                        { value: 'dog',   label: '🐕 Cachorro' },
+                        { value: 'cat',   label: '🐈 Gato'     },
+                        { value: 'other', label: '🐾 Outro'    },
+                      ].map(({ value, label }) => (
+                        <label
+                          key={value}
+                          className={`${styles.radioChip} ${animalType === value ? styles.radioChipActive : ''}`}
+                        >
+                          <input
+                            type="radio"
+                            name="animal_type_radio"
+                            value={value}
+                            checked={animalType === value}
+                            onChange={() => { setAnimalType(value); setRacaSel(''); setOutroTipo(''); setOutraRaca(''); }}
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                    {/* Campo aberto para "Outro" tipo */}
+                    {animalType === 'other' && (
+                      <input
+                        className={styles.outroInput}
+                        type="text"
+                        placeholder="Qual animal? ex: Coelho, Hamster, Pássaro..."
+                        value={outroTipo}
+                        onChange={(e) => setOutroTipo(e.target.value)}
+                        autoFocus
+                      />
+                    )}
                   </div>
+
+                  {/* Raça — checkbox (aparece só se cachorro ou gato) */}
+                  {RACAS[animalType] && (
+                    <div className={styles.fieldGroup}>
+                      <label className={styles.fieldLabel}>Raça</label>
+                      <div className={styles.checkGrid}>
+                        {RACAS[animalType].map((raca) => (
+                          <label
+                            key={raca}
+                            className={`${styles.checkChip} ${racaSel === raca ? styles.checkChipActive : ''}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={racaSel === raca}
+                              onChange={() => { setRacaSel(racaSel === raca ? '' : raca); setOutraRaca(''); }}
+                            />
+                            {raca}
+                          </label>
+                        ))}
+                      </div>
+                      {/* Campo aberto para "Outro" raça */}
+                      {racaSel === 'Outro' && (
+                        <input
+                          className={styles.outroInput}
+                          type="text"
+                          placeholder="Qual a raça? ex: Akita, Sphynx..."
+                          value={outraRaca}
+                          onChange={(e) => setOutraRaca(e.target.value)}
+                          autoFocus
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Cor — checkbox múltiplo */}
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel}>Cor(es)</label>
+                    <div className={styles.checkGrid}>
+                      {CORES.map((cor) => (
+                        <label
+                          key={cor}
+                          className={`${styles.checkChip} ${coresSel.includes(cor) ? styles.checkChipActive : ''}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={coresSel.includes(cor)}
+                            onChange={() => toggleCor(cor)}
+                          />
+                          {cor}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
                   <Textarea
                     label="Descrição (opcional)"
                     placeholder="Algum detalhe que ajude a identificar o animal..."
@@ -206,15 +287,11 @@ export default function QuickReport() {
               </div>
             )}
 
-            {/* ── Passo 1: Localização ──────────────────────────────────── */}
+            {/* ── Passo 1: Localização ── */}
             {step === 1 && (
               <div className={styles.stepContent}>
-                <h2 className={styles.stepTitle}>
-                  <MapPin size={20} /> Onde você viu o animal?
-                </h2>
-                <p className={styles.stepDesc}>
-                  Quanto mais detalhes, mais fácil será encontrar o dono.
-                </p>
+                <h2 className={styles.stepTitle}><MapPin size={20} /> Onde você viu o animal?</h2>
+                <p className={styles.stepDesc}>Quanto mais detalhes, mais fácil será encontrar o dono.</p>
 
                 <Textarea
                   label="Localização *"
@@ -230,20 +307,8 @@ export default function QuickReport() {
                 </div>
 
                 <div className={styles.twoCol}>
-                  <Input
-                    label="Latitude (opcional)"
-                    type="number"
-                    step="any"
-                    placeholder="-23.550520"
-                    {...register('latitude')}
-                  />
-                  <Input
-                    label="Longitude (opcional)"
-                    type="number"
-                    step="any"
-                    placeholder="-46.633308"
-                    {...register('longitude')}
-                  />
+                  <Input label="Latitude (opcional)" type="number" step="any" placeholder="-23.550520" {...register('latitude')} />
+                  <Input label="Longitude (opcional)" type="number" step="any" placeholder="-46.633308" {...register('longitude')} />
                 </div>
                 <p className={styles.hint}>
                   💡 Você pode obter as coordenadas abrindo o Google Maps e clicando no local.
@@ -251,12 +316,10 @@ export default function QuickReport() {
               </div>
             )}
 
-            {/* ── Passo 2: Contato ──────────────────────────────────────── */}
+            {/* ── Passo 2: Contato ── */}
             {step === 2 && (
               <div className={styles.stepContent}>
-                <h2 className={styles.stepTitle}>
-                  <Phone size={20} /> Suas informações de contato
-                </h2>
+                <h2 className={styles.stepTitle}><Phone size={20} /> Suas informações de contato</h2>
                 <p className={styles.stepDesc}>Totalmente opcional. Ajuda quem está procurando.</p>
 
                 <div className={styles.twoCol}>
@@ -300,7 +363,7 @@ export default function QuickReport() {
               </div>
             )}
 
-            {/* ── Navigation ────────────────────────────────────────────── */}
+            {/* ── Navigation ── */}
             <div className={styles.navBtns}>
               {step > 0 && (
                 <Button type="button" variant="ghost" onClick={() => setStep((s) => s - 1)}>

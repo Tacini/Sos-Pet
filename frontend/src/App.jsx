@@ -4,13 +4,15 @@ import Navbar from './components/layout/Navbar';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 
 // Pages
-import Home        from './pages/Home';
-import Login       from './pages/Login';
-import Register    from './pages/Register';
-import QuickReport from './pages/QuickReport';
-import LostPetForm from './pages/LostPetForm';
-import SearchPage  from './pages/SearchPage';
-import MyPets      from './pages/MyPets';
+import Home         from './pages/Home';
+import Login        from './pages/Login';
+import Register     from './pages/Register';
+import QuickReport  from './pages/QuickReport';
+import LostPetForm  from './pages/LostPetForm';
+import SearchPage   from './pages/SearchPage';
+import MyPets       from './pages/MyPets';
+import PetDetail    from './pages/PetDetail';
+import ReportDetail from './pages/ReportDetail';
 
 function NotFound() {
   return (
@@ -38,11 +40,15 @@ export default function App() {
       <Navbar />
       <Routes>
         {/* Públicas */}
-        <Route path="/"        element={<Home />} />
-        <Route path="/login"   element={<Login />} />
-        <Route path="/cadastro" element={<Register />} />
-        <Route path="/relatar" element={<QuickReport />} />
-        <Route path="/busca"   element={<SearchPage />} />
+        <Route path="/"          element={<Home />} />
+        <Route path="/login"     element={<Login />} />
+        <Route path="/cadastro"  element={<Register />} />
+        <Route path="/relatar"   element={<QuickReport />} />
+        <Route path="/busca"     element={<SearchPage />} />
+
+        {/* Detalhes */}
+        <Route path="/pets/:id"    element={<PetDetail />} />
+        <Route path="/relatos/:id" element={<ReportDetail />} />
 
         {/* Protegidas */}
         <Route path="/meu-pet" element={

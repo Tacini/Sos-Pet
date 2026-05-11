@@ -166,7 +166,86 @@
 .successDesc  { color: var(--warm-grey); line-height: 1.7; }
 .successActions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
 
+/* ── Radio e Checkbox chips ───────────────────────────────────────────────── */
+.fieldGroup  { display: flex; flex-direction: column; gap: 8px; }
+.fieldLabel  { font-size: 0.88rem; font-weight: 600; color: var(--charcoal); }
+
+.radioRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.radioChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 2px solid var(--sand-dark);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 500;
+  background: var(--white);
+  transition: all var(--transition);
+}
+.radioChip input { display: none; }
+.radioChip:hover { border-color: var(--terra-light); }
+.radioChipActive { border-color: var(--terra); background: rgba(196,98,45,0.08); color: var(--terra); font-weight: 600; }
+
+.checkGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.checkChip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border: 2px solid var(--sand-dark);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 500;
+  background: var(--white);
+  transition: all var(--transition);
+  text-align: center;
+  white-space: nowrap;
+  user-select: none;
+}
+.checkChip input { display: none; }
+.checkChip:hover { border-color: var(--terra-light); color: var(--terra); }
+.checkChipActive {
+  border-color: var(--terra);
+  background: var(--terra);
+  color: var(--white);
+  font-weight: 600;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .section { padding: 24px; }
   .grid    { grid-template-columns: 1fr; }
 }
+
+/* ── Campo "Outro" ────────────────────────────────────────────────────────── */
+.outroInput {
+  width: 100%;
+  padding: 11px 16px;
+  border: 2px solid var(--terra);
+  border-radius: var(--radius-md);
+  background: rgba(196,98,45,0.04);
+  color: var(--charcoal);
+  font-size: 0.95rem;
+  font-family: var(--font-body);
+  outline: none;
+  transition: all var(--transition);
+  margin-top: 4px;
+}
+.outroInput:focus {
+  box-shadow: 0 0 0 3px rgba(196,98,45,0.15);
+}
+.outroInput::placeholder { color: #bbb; }
+
