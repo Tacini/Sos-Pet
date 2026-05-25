@@ -13,7 +13,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const STATUS_CONFIG = {
   lost:   { label: 'Perdido',    variant: 'terra',   icon: Clock },
-  found:  { label: 'encontrado', variant: 'forest',  icon: CheckCircle },
+  found:  { label: 'visto', variant: 'forest',  icon: CheckCircle },
   closed: { label: 'Encerrado',  variant: 'default', icon: XCircle },
 };
 
