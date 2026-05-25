@@ -4,21 +4,23 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-  "preinstall": "npm config set legacy-peer-deps true",
-  "dev": "vite",
-  "build": "vite build",
-  "preview": "vite preview"
-},
+    "preinstall": "npm config set legacy-peer-deps true",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.21.1",
     "axios": "^1.6.2",
+    "date-fns": "^3.0.6",
+    "date-fns-tz": "^2.0.0",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.303.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-hook-form": "^7.49.2",
     "react-hot-toast": "^2.4.1",
-    "lucide-react": "^0.303.0",
-    "date-fns": "^3.0.6",
-    "date-fns-tz": "^2.0.0"
+    "react-leaflet": "^4.2.1",
+    "react-router-dom": "^6.21.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

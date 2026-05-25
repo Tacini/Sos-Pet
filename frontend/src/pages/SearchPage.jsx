@@ -109,7 +109,7 @@ export default function SearchPage() {
           <h1 className={styles.title}>Buscar animais perdidos</h1>
           <p className={styles.subtitle}>
             {pets.length > 0
-              ? `${pets.length} resultado${pets.length !== 1 ? 's' : ''} encontrado${pets.length !== 1 ? 's' : ''}`
+              ? `${pets.length} resultado${pets.length !== 1 ? 's' : ''} visto${pets.length !== 1 ? 's' : ''}`
               : 'Use os filtros para refinar sua busca'}
           </p>
         </div>

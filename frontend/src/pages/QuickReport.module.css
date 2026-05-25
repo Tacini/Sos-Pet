@@ -338,3 +338,89 @@
 }
 .outroInput::placeholder { color: #bbb; }
 
+
+
+/* ── Map ──────────────────────────────────────────────────────────────────── */
+.mapWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mapHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mapLabel {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+
+.locationBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--forest-light);
+  color: var(--forest);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.locationBtn:hover { background: #d9e9d0; }
+
+.map {
+  width: 100%;
+  height: 300px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--sand-dark);
+  overflow: hidden;
+}
+
+.mapPlaceholder {
+  width: 100%;
+  height: 300px;
+  border-radius: var(--radius-md);
+  border: 1.5px dashed var(--sand-dark);
+  background: var(--light-grey);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--warm-grey);
+}
+.mapPlaceholder p    { font-size: 0.95rem; font-weight: 600; }
+.mapPlaceholder span { font-size: 0.8rem; }
+
+.coordsInfo {
+  font-size: 0.82rem;
+  color: var(--forest);
+  font-weight: 500;
+}
+
+/* ── Field hint e limit warning ───────────────────────────────────────────── */
+.fieldHint {
+  font-weight: 400;
+  color: var(--warm-grey);
+  font-size: 0.82rem;
+}
+
+.limitWarning {
+  font-size: 0.82rem;
+  color: var(--terra);
+  font-weight: 500;
+  background: rgba(196,98,45,0.08);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+}
+

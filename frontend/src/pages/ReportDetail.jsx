@@ -58,7 +58,7 @@ export default function ReportDetail() {
           <div className={styles.photoSection}>
             <div className={styles.mainPhoto}>
               {report.photo_url ? (
-                <img src={photoSrc} alt="Animal encontrado" />
+                <img src={photoSrc} alt="Animal visto" />
               ) : (
                 <div className={styles.noPhoto}>🐾</div>
               )}
@@ -68,14 +68,14 @@ export default function ReportDetail() {
                     {TYPE_LABELS[report.animal_type] || report.animal_type}
                   </Badge>
                 )}
-                <Badge variant="forest">Encontrado</Badge>
+                <Badge variant="forest">Visto</Badge>
               </div>
             </div>
           </div>
 
           {/* ── Informações ── */}
           <div className={styles.info}>
-            <h1 className={styles.name}>Animal encontrado</h1>
+            <h1 className={styles.name}>Animal Visto</h1>
 
             <div className={styles.tags}>
               {report.animal_color && <span className={styles.tag}>{report.animal_color}</span>}

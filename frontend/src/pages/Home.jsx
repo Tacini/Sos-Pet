@@ -30,7 +30,7 @@ export default function Home() {
               <em>famílias e seus pets</em>
             </h1>
             <p className={styles.heroDesc}>
-              Relate um animal encontrado ou anuncie seu pet perdido.
+              Relate um animal visto ou anuncie seu pet perdido.
               Juntos somos mais fortes.
             </p>
             <div className={styles.heroActions}>
@@ -98,7 +98,7 @@ export default function Home() {
         <div className="container">
           <div className={styles.sectionHeader}>
             <div>
-              <h2 className="section-title">Animais encontrados recentemente</h2>
+              <h2 className="section-title">Animais vistos recentemente</h2>
               <p className="section-subtitle">Alguém viu esses animais — pode ser o seu?</p>
             </div>
             <Link to="/busca?tab=found">
@@ -109,7 +109,7 @@ export default function Home() {
           {loading ? (
             <div className={styles.loadingWrap}><Spinner size="lg" /></div>
           ) : feed.recentReports.length === 0 ? (
-            <Empty icon="🔍" title="Nenhum relato ainda" description="Seja o primeiro a relatar um animal encontrado!" />
+            <Empty icon="🔍" title="Nenhum relato ainda" description="Seja o primeiro a relatar um animal visto!" />
           ) : (
             <div className={styles.grid}>
               {feed.recentReports.map((r, i) => (

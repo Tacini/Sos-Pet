@@ -55,7 +55,7 @@ export default function AnimalCard({ animal, type = 'lost' }) {
         )}
         {type === 'found' && (
           <div className={styles.statusBadge}>
-            <Badge variant="forest">Encontrado</Badge>
+            <Badge variant="forest">Visto</Badge>
           </div>
         )}
       </div>

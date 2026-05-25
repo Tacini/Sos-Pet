@@ -12,7 +12,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const TYPE_LABELS = { dog: 'Cachorro', cat: 'Gato', bird: 'Pássaro', rabbit: 'Coelho', other: 'Outro' };
 const STATUS_CONFIG = {
   lost:   { label: 'Perdido',    variant: 'terra'   },
-  found:  { label: 'Encontrado', variant: 'forest'  },
+  found:  { label: 'encontrado', variant: 'forest'  },
   closed: { label: 'Encerrado',  variant: 'default' },
 };
 
@@ -110,7 +110,7 @@ export default function PetDetail() {
             )}
 
             <div className={styles.card}>
-              <h3 className={styles.cardTitle}>Último local visto</h3>
+              <h3 className={styles.cardTitle}>Último local encontrado</h3>
               <div className={styles.infoRow}>
                 <MapPin size={16} className={styles.infoIcon} />
                 <span>{pet.last_seen_location}</span>
