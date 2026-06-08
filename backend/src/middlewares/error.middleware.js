@@ -1,9 +1,23 @@
+const fs = require('fs');
+const path = require('path');
 const { validationResult } = require('express-validator');
 
-// Middleware de tratamento de erros de validação
+const uploadDir = process.env.UPLOAD_DIR || 'uploads';
+
+function cleanupUploads(req) {
+  const files = req.files || (req.file ? [req.file] : []);
+  for (const file of files) {
+    const filePath = file.path || path.join(uploadDir, file.filename);
+    if (filePath) {
+      fs.unlink(filePath, () => {});
+    }
+  }
+}
+
 const validateRequest = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    cleanupUploads(req);
     return res.status(422).json({
       success: false,
       message: 'Dados inválidos.',
@@ -13,11 +27,9 @@ const validateRequest = (req, res, next) => {
   next();
 };
 
-// Handler global de erros
 const errorHandler = (err, req, res, next) => {
   console.error('❌ Error:', err.message);
 
-  // Multer errors
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
       success: false,
@@ -32,7 +44,6 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // PostgreSQL unique violation
   if (err.code === '23505') {
     return res.status(409).json({
       success: false,
@@ -40,14 +51,12 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Default
   res.status(err.status || 500).json({
     success: false,
     message: process.env.NODE_ENV === 'production' ? 'Erro interno do servidor.' : err.message,
   });
 };
 
-// 404 handler
 const notFound = (req, res) => {
   res.status(404).json({
     success: false,

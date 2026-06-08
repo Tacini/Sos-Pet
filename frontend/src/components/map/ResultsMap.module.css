@@ -1,0 +1,123 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+}
+
+.wrap {
+  width: 100%;
+  height: 420px;
+  border-radius: var(--radius-lg, 16px);
+  overflow: hidden;
+  border: 1px solid var(--sand-dark, #e8e0d8);
+  background: #eef2f6;
+  position: relative;
+  z-index: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.map {
+  height: 100%;
+  width: 100%;
+}
+
+.markerWrap {
+  background: transparent;
+  border: none;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 0 4px;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--warm-grey, #6b6259);
+  font-weight: 500;
+}
+
+.legendDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.legendLost { background: var(--terra, #c4622d); }
+.legendAvistado { background: var(--forest, #2d5016); }
+.legendYou { background: #2563eb; }
+
+.badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 500;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--sand-dark, #e8e0d8);
+  border-radius: 100px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--charcoal, #1a1612);
+  box-shadow: var(--shadow-sm);
+  pointer-events: none;
+}
+
+.emptyMap {
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--forest-light, #edf2e8);
+  border-radius: var(--radius-md, 12px);
+  font-size: 0.88rem;
+  color: var(--forest, #2d5016);
+}
+
+.popup {
+  min-width: 160px;
+}
+
+.popup strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.popupMeta {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  color: #6b6259;
+}
+
+.popupType {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.popupBtn {
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 8px;
+  background: var(--terra, #c4622d);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.popupBtn:hover {
+  background: var(--terra-dark, #9e4a1e);
+}
+
+@media (max-width: 640px) {
+  .wrap { height: 320px; }
+}

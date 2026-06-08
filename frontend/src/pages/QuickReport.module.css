@@ -211,8 +211,61 @@
 }
 .checkLabel input { accent-color: var(--terra); width: 16px; height: 16px; }
 
-.contactMethods { display: flex; flex-direction: column; gap: 10px; }
+.contactMethods {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 4px 26px;
+  padding: 14px 16px;
+  background: var(--forest-light);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--sand-dark);
+}
+
+.contactMethodsLabel {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+
+.methodBoxes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.methodBox {
+  padding: 12px 10px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--sand-dark);
+  background: var(--white);
+  color: var(--warm-grey);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: center;
+}
+
+.methodBox:hover {
+  border-color: var(--terra-light);
+  color: var(--terra);
+}
+
+.methodBoxActive {
+  border-color: var(--terra);
+  background: var(--terra);
+  color: var(--white);
+}
+
 .checkRow { display: flex; gap: 10px; flex-wrap: wrap; }
+
+@media (max-width: 480px) {
+  .methodBoxes { grid-template-columns: 1fr; }
+  .contactMethods { margin-left: 0; }
+}
 
 /* ── Navigation buttons ───────────────────────────────────────────────────── */
 .navBtns {

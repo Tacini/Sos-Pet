@@ -1,252 +1,283 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, SlidersHorizontal, X, MapPin } from 'lucide-react';
+import { Filter, Navigation, Loader2, MapPin } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { searchService } from '../services';
+import { Button, Input, Spinner } from '../components/ui';
 import AnimalCard from '../components/ui/AnimalCard';
-import { Button, Input, Select, Spinner, Empty } from '../components/ui';
+import ResultsMap from '../components/map/ResultsMap';
 import styles from './SearchPage.module.css';
+import {
+  getCurrentLocation,
+  getGeolocationErrorMessage,
+  STANDARDIZED_COLORS,
+} from '../utils/geolocationUtils';
 
-const ANIMAL_TYPES = [
-  { value: '', label: 'Todos os animais' },
-  { value: 'dog',    label: '🐕 Cachorros' },
-  { value: 'cat',    label: '🐈 Gatos' },
-  { value: 'bird',   label: '🐦 Pássaros' },
-  { value: 'rabbit', label: '🐇 Coelhos' },
-  { value: 'other',  label: 'Outros' },
-];
+const DEFAULT_CENTER = [-23.55, -46.63];
+const RADIUS_OPTIONS = [5, 10, 20, 50];
 
-const RADII = [
-  { value: '2',  label: '2 km' },
-  { value: '5',  label: '5 km' },
-  { value: '10', label: '10 km' },
-  { value: '25', label: '25 km' },
-  { value: '50', label: '50 km' },
-];
+function itemKey(item) {
+  return `${item.isPet ? 'p' : 'r'}-${item.id}`;
+}
 
 export default function SearchPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [urlParams] = useSearchParams();
+  const initialTab = urlParams.get('tab') === 'found' ? 'found' : 'all';
+  const cardRefs = useRef({});
 
-  const [pets, setPets]           = useState([]);
-  const [loading, setLoading]     = useState(false);
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [locating, setLocating] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [locating, setLocating]   = useState(false);
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [animalType, setAnimalType] = useState('all');
+  const [searchParams, setSearchParams] = useState({ city: '', breed: '', color: '' });
+  const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
+  const [userLocation, setUserLocation] = useState(null);
+  const [searchRadius, setSearchRadius] = useState(10);
+  const [selectedKey, setSelectedKey] = useState(null);
+  const [recenterOnUser, setRecenterOnUser] = useState(false);
 
-  const [filters, setFilters] = useState({
-    type:   searchParams.get('type')   || '',
-    color:  searchParams.get('color')  || '',
-    breed:  searchParams.get('breed')  || '',
-    city:   searchParams.get('city')   || '',
-    lat:    searchParams.get('lat')    || '',
-    lng:    searchParams.get('lng')    || '',
-    radius: searchParams.get('radius') || '5',
-  });
-
-  const fetchResults = useCallback(async (f) => {
+  const fetchResults = useCallback(async () => {
     setLoading(true);
     try {
-      const params = Object.fromEntries(Object.entries(f).filter(([, v]) => v !== ''));
+      const typeFilter = animalType !== 'all' ? animalType : undefined;
+      const params = {
+        type: typeFilter,
+        city: searchParams.city || undefined,
+        breed: searchParams.breed || undefined,
+        color: searchParams.color || undefined,
+      };
+
+      if (userLocation) {
+        params.lat = userLocation.latitude;
+        params.lng = userLocation.longitude;
+        params.radius = searchRadius;
+      }
+
       const { data } = await searchService.search(params);
-      setPets(data.data.pets || []);
-    } catch (err) {
-      console.error(err);
-      setPets([]);
+      const petsData = data.data?.pets || [];
+      const reportsData = data.data?.reports || [];
+
+      let combined = [
+        ...petsData.map((p) => ({ ...p, isPet: true })),
+        ...reportsData.map((r) => ({ ...r, isPet: false })),
+      ];
+
+      if (activeTab === 'lost') {
+        combined = combined.filter((item) => item.isPet);
+      } else if (activeTab === 'found') {
+        combined = combined.filter((item) => !item.isPet);
+      }
+
+      setResults(combined);
+      setSelectedKey(null);
+    } catch (error) {
+      console.error('Erro na busca:', error);
+      toast.error('Erro ao carregar resultados.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [animalType, searchParams, userLocation, searchRadius, activeTab]);
 
   useEffect(() => {
-    fetchResults(filters);
-  }, []);
+    fetchResults();
+  }, [fetchResults]);
 
-  const handleFilter = (key, val) => {
-    setFilters((prev) => ({ ...prev, [key]: val }));
-  };
-
-  const applyFilters = () => {
-    const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== ''));
-    setSearchParams(params);
-    fetchResults(filters);
-    setShowFilters(false);
-  };
-
-  const clearFilters = () => {
-    const reset = { type: '', color: '', breed: '', city: '', lat: '', lng: '', radius: '5' };
-    setFilters(reset);
-    setSearchParams({});
-    fetchResults(reset);
-  };
-
-  const useMyLocation = () => {
-    if (!navigator.geolocation) {
-      alert('Geolocalização não suportada neste navegador.');
-      return;
-    }
+  const handleUseMyLocation = async () => {
     setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const updated = { ...filters, lat: String(coords.latitude.toFixed(6)), lng: String(coords.longitude.toFixed(6)) };
-        setFilters(updated);
-        setLocating(false);
-      },
-      () => {
-        alert('Não foi possível obter sua localização.');
-        setLocating(false);
-      }
-    );
+    try {
+      const loc = await getCurrentLocation();
+      setUserLocation(loc);
+      setMapCenter([loc.latitude, loc.longitude]);
+      setRecenterOnUser(true);
+      toast.success(`Buscando num raio de ${searchRadius} km da sua localização.`);
+    } catch (err) {
+      toast.error(getGeolocationErrorMessage(err));
+    } finally {
+      setLocating(false);
+    }
   };
 
-  const hasActiveFilters = Object.entries(filters).some(
-    ([k, v]) => v !== '' && k !== 'radius'
-  );
+  const handleClearLocation = () => {
+    setUserLocation(null);
+    setMapCenter(DEFAULT_CENTER);
+    setRecenterOnUser(false);
+    setSelectedKey(null);
+  };
+
+  const handleMapSelect = (item, key) => {
+    setSelectedKey(key);
+    setRecenterOnUser(false);
+    cardRefs.current[key]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
+  const mappedCount = results.filter((item) => {
+    const lat = parseFloat(item.isPet ? item.last_seen_latitude : item.latitude);
+    const lng = parseFloat(item.isPet ? item.last_seen_longitude : item.longitude);
+    return !Number.isNaN(lat) && !Number.isNaN(lng);
+  }).length;
 
   return (
     <div className={styles.page}>
       <div className="container">
-
-        {/* ── Page Header ─────────────────────────────────────────────── */}
-        <div className={styles.pageHeader}>
-          <h1 className={styles.title}>Buscar animais perdidos</h1>
+        <header className={styles.pageHeader}>
+          <h1 className={styles.title}>Encontrar Animais</h1>
           <p className={styles.subtitle}>
-            {pets.length > 0
-              ? `${pets.length} resultado${pets.length !== 1 ? 's' : ''} visto${pets.length !== 1 ? 's' : ''}`
-              : 'Use os filtros para refinar sua busca'}
+            {userLocation
+              ? `Mostrando resultados num raio de ${searchRadius} km da sua localização.`
+              : 'Use o mapa, filtros ou sua localização para encontrar animais perdidos e avistados.'}
           </p>
-        </div>
+        </header>
 
-        {/* ── Filter bar ──────────────────────────────────────────────── */}
         <div className={styles.filterBar}>
           <div className={styles.filterBarInner}>
-            {/* Quick type select */}
-            <div className={styles.typeButtons}>
-              {ANIMAL_TYPES.map(({ value, label }) => (
+            <div className={styles.tabButtons}>
+              {[
+                { id: 'all', label: 'Todos' },
+                { id: 'lost', label: 'Perdidos' },
+                { id: 'found', label: 'Avistados' },
+              ].map(({ id, label }) => (
                 <button
-                  key={value}
-                  className={`${styles.typeBtn} ${filters.type === value ? styles.typeBtnActive : ''}`}
-                  onClick={() => handleFilter('type', value)}
+                  key={id}
+                  type="button"
+                  className={`${styles.typeBtn} ${activeTab === id ? styles.typeBtnActive : ''}`}
+                  onClick={() => setActiveTab(id)}
                 >
                   {label}
                 </button>
               ))}
             </div>
 
+            <div className={styles.typeButtons}>
+              {['all', 'dog', 'cat', 'other'].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className={`${styles.typeBtn} ${animalType === t ? styles.typeBtnActive : ''}`}
+                  onClick={() => setAnimalType(t)}
+                >
+                  {t === 'all' ? 'Todos tipos' : t === 'dog' ? 'Cães' : t === 'cat' ? 'Gatos' : 'Outros'}
+                </button>
+              ))}
+            </div>
+
             <div className={styles.filterActions}>
-              {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  <X size={14} /> Limpar
+              <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
+                <Filter size={16} /> Filtros
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleUseMyLocation} loading={locating}>
+                <Navigation size={16} /> Minha localização
+              </Button>
+              {userLocation && (
+                <Button variant="ghost" size="sm" onClick={handleClearLocation}>
+                  Limpar GPS
                 </Button>
               )}
-              <Button
-                variant={showFilters ? 'secondary' : 'outline'}
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <SlidersHorizontal size={15} /> Filtros
-              </Button>
-              <Button variant="primary" size="sm" onClick={applyFilters}>
-                <Search size={15} /> Buscar
-              </Button>
             </div>
           </div>
 
-          {/* Extended filters panel */}
           {showFilters && (
             <div className={styles.filtersPanel}>
               <div className={styles.filtersGrid}>
                 <Input
-                  label="Cor"
-                  placeholder="ex: preto, caramelo"
-                  value={filters.color}
-                  onChange={(e) => handleFilter('color', e.target.value)}
+                  label="Cidade"
+                  value={searchParams.city}
+                  onChange={(e) => setSearchParams({ ...searchParams, city: e.target.value })}
                 />
                 <Input
                   label="Raça"
-                  placeholder="ex: Labrador"
-                  value={filters.breed}
-                  onChange={(e) => handleFilter('breed', e.target.value)}
+                  value={searchParams.breed}
+                  onChange={(e) => setSearchParams({ ...searchParams, breed: e.target.value })}
                 />
-                <Input
-                  label="Cidade"
-                  placeholder="ex: São Paulo"
-                  value={filters.city}
-                  onChange={(e) => handleFilter('city', e.target.value)}
-                />
-              </div>
-
-              <div className={styles.geoSection}>
-                <p className={styles.geoTitle}>📍 Buscar por raio de distância</p>
-                <div className={styles.geoRow}>
-                  <Input
-                    label="Latitude"
-                    placeholder="-23.550520"
-                    value={filters.lat}
-                    onChange={(e) => handleFilter('lat', e.target.value)}
-                  />
-                  <Input
-                    label="Longitude"
-                    placeholder="-46.633308"
-                    value={filters.lng}
-                    onChange={(e) => handleFilter('lng', e.target.value)}
-                  />
-                  <Select
-                    label="Raio"
-                    value={filters.radius}
-                    onChange={(e) => handleFilter('radius', e.target.value)}
+                <div>
+                  <label className={styles.selectLabel}>Cor</label>
+                  <select
+                    className={styles.select}
+                    value={searchParams.color}
+                    onChange={(e) => setSearchParams({ ...searchParams, color: e.target.value })}
                   >
-                    {RADII.map(({ value, label }) => (
-                      <option key={value} value={value}>{label}</option>
+                    <option value="">Todas</option>
+                    {STANDARDIZED_COLORS.map((c) => (
+                      <option key={c.id} value={c.label}>{c.label}</option>
                     ))}
-                  </Select>
+                  </select>
                 </div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={useMyLocation}
-                  loading={locating}
-                  style={{ alignSelf: 'flex-start' }}
-                >
-                  <MapPin size={15} />
-                  {locating ? 'Localizando…' : 'Usar minha localização'}
-                </Button>
-                {filters.lat && filters.lng && (
-                  <p className={styles.coordsInfo}>
-                    ✅ Coordenadas definidas · buscando em raio de {filters.radius}km
-                  </p>
-                )}
               </div>
 
-              <Button variant="primary" onClick={applyFilters} style={{ alignSelf: 'flex-end' }}>
-                Aplicar filtros
-              </Button>
+              {userLocation && (
+                <div className={styles.geoSection}>
+                  <p className={styles.geoTitle}>
+                    <MapPin size={15} /> Raio de busca
+                  </p>
+                  <div className={styles.radiusRow}>
+                    {RADIUS_OPTIONS.map((km) => (
+                      <button
+                        key={km}
+                        type="button"
+                        className={`${styles.typeBtn} ${searchRadius === km ? styles.typeBtnActive : ''}`}
+                        onClick={() => setSearchRadius(km)}
+                      >
+                        {km} km
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* ── Results ─────────────────────────────────────────────────── */}
-        {loading ? (
-          <div className={styles.loadingWrap}>
-            <Spinner size="lg" />
-            <p>Buscando animais...</p>
-          </div>
-        ) : pets.length === 0 ? (
-          <Empty
-            icon="🔍"
-            title="Nenhum resultado encontrado"
-            description="Tente ajustar os filtros ou ampliar o raio de busca."
+        <section className={styles.mapSection}>
+          <ResultsMap
+            center={mapCenter}
+            zoom={userLocation ? 14 : 12}
+            results={results}
+            userPosition={userLocation}
+            radiusKm={userLocation ? searchRadius : null}
+            selectedKey={selectedKey}
+            onSelectItem={handleMapSelect}
+            recenterOnUser={recenterOnUser}
           />
-        ) : (
-          <div className={styles.grid}>
-            {pets.map((pet, i) => (
-              <div
-                key={pet.id}
-                className="animate-fade-up"
-                style={{ animationDelay: `${i * 40}ms` }}
-              >
-                <AnimalCard animal={pet} type="lost" />
-              </div>
-            ))}
+        </section>
+
+        <section className={styles.resultsSection}>
+          <div className={styles.resultsHeader}>
+            <h2 className={styles.resultsTitle}>
+              {loading ? 'Carregando...' : `${results.length} resultado${results.length !== 1 ? 's' : ''}`}
+            </h2>
+            {!loading && mappedCount > 0 && (
+              <span className={styles.resultsMeta}>{mappedCount} com localização no mapa</span>
+            )}
           </div>
-        )}
+
+          {loading ? (
+            <div className={styles.loadingWrap}>
+              <Spinner size="lg" />
+              <span>Buscando animais...</span>
+            </div>
+          ) : results.length > 0 ? (
+            <div className={styles.grid}>
+              {results.map((item) => {
+                const key = itemKey(item);
+                return (
+                  <div
+                    key={key}
+                    ref={(el) => { cardRefs.current[key] = el; }}
+                    className={selectedKey === key ? styles.cardHighlight : undefined}
+                  >
+                    <AnimalCard animal={item} type={item.isPet ? 'lost' : 'found'} />
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className={styles.emptyResults}>
+              Nenhum animal encontrado com esses filtros.
+              {userLocation ? ' Tente aumentar o raio de busca.' : ' Ative sua localização ou refine os filtros.'}
+            </p>
+          )}
+        </section>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { petService } from '../services';
 import { Button, Badge, Spinner } from '../components/ui';
+import { parsePhotos } from '../utils/photoUtils';
 import styles from './DetailPage.module.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -12,7 +13,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const TYPE_LABELS = { dog: 'Cachorro', cat: 'Gato', bird: 'Pássaro', rabbit: 'Coelho', other: 'Outro' };
 const STATUS_CONFIG = {
   lost:   { label: 'Perdido',    variant: 'terra'   },
-  found:  { label: 'visto', variant: 'forest'  },
+  found:  { label: 'Encontrado', variant: 'forest'  },
   closed: { label: 'Encerrado',  variant: 'default' },
 };
 
@@ -26,7 +27,7 @@ export default function PetDetail() {
   useEffect(() => {
     petService.getById(id)
       .then(({ data }) => setPet(data.data.pet))
-      .catch(() => navigate('/404'))
+      .catch(() => navigate('/', { replace: true }))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -40,7 +41,7 @@ export default function PetDetail() {
 
   if (!pet) return null;
 
-  const photos = pet.photos || [];
+  const photos = parsePhotos(pet.photos);
   const currentPhoto = photos[photoIdx];
   const photoSrc = currentPhoto?.startsWith('http') ? currentPhoto : `${API_URL}${currentPhoto}`;
   const status = STATUS_CONFIG[pet.status] || STATUS_CONFIG.lost;

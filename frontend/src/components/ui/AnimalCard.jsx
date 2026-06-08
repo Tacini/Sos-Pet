@@ -1,7 +1,8 @@
 import { MapPin, Clock, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { parsePhotos } from '../../utils/photoUtils';
 import { Card, Badge } from '../ui';
 import styles from './AnimalCard.module.css';
 
@@ -13,9 +14,8 @@ const TYPE_BADGE  = { dog: 'dog', cat: 'cat', bird: 'default', rabbit: 'default'
 export default function AnimalCard({ animal, type = 'lost' }) {
   const navigate = useNavigate();
 
-  const photo = type === 'lost'
-    ? animal.photos?.[0]
-    : animal.photo_url;
+  const photoList = type === 'lost' ? parsePhotos(animal.photos) : [];
+  const photo = type === 'lost' ? photoList[0] : animal.photo_url;
 
   const photoSrc = photo?.startsWith('http') ? photo : `${API_URL}${photo}`;
 
@@ -55,7 +55,7 @@ export default function AnimalCard({ animal, type = 'lost' }) {
         )}
         {type === 'found' && (
           <div className={styles.statusBadge}>
-            <Badge variant="forest">Visto</Badge>
+            <Badge variant="forest">Avistado</Badge>
           </div>
         )}
       </div>

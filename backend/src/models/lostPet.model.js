@@ -3,10 +3,22 @@ const pool = require('../config/database');
 class LostPetModel {
   static async create(data) {
     const {
-      userId, name, type, breed, color, approximateAge,
-      lastSeenLocation, lastSeenLatitude, lastSeenLongitude,
-      city, neighborhood, description, contactPhone, contactEmail,
-      rewardInfo, photos,
+      userId,
+      name,
+      type,
+      breed,
+      color,
+      approximateAge,
+      lastSeenLocation,
+      lastSeenLatitude,
+      lastSeenLongitude,
+      city,
+      neighborhood,
+      description,
+      contactPhone,
+      contactEmail,
+      rewardInfo,
+      photos,
     } = data;
 
     const { rows } = await pool.query(
@@ -18,11 +30,22 @@ class LostPetModel {
       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
       RETURNING *`,
       [
-        userId, name, type, breed || null, color, approximateAge || null,
-        lastSeenLocation, lastSeenLatitude || null, lastSeenLongitude || null,
-        city || null, neighborhood || null, description || null,
-        contactPhone || null, contactEmail || null,
-        rewardInfo || null, JSON.stringify(photos || []),
+        userId,
+        name,
+        type,
+        breed || null,
+        color,
+        approximateAge || null,
+        lastSeenLocation,
+        lastSeenLatitude || null,
+        lastSeenLongitude || null,
+        city || null,
+        neighborhood || null,
+        description || null,
+        contactPhone || null,
+        contactEmail || null,
+        rewardInfo || null,
+        JSON.stringify(photos || []),
       ]
     );
     return rows[0];
@@ -52,7 +75,30 @@ class LostPetModel {
     return rows;
   }
 
-  // Busca por distância geográfica usando earthdistance
+  static async findByStructuredAddress({ cidade, bairro, cor, type, limit = 20, offset = 0 } = {}) {
+    const conditions = ["lp.status = 'lost'"];
+    const values = [];
+    let idx = 1;
+
+    if (cidade) { conditions.push(`lp.city ILIKE $${idx++}`); values.push(`%${cidade}%`); }
+    if (bairro) { conditions.push(`lp.neighborhood ILIKE $${idx++}`); values.push(`%${bairro}%`); }
+    if (cor)    { conditions.push(`lp.color ILIKE $${idx++}`); values.push(`%${cor}%`); }
+    if (type)   { conditions.push(`lp.type = $${idx++}`); values.push(type); }
+
+    values.push(limit, offset);
+
+    const { rows } = await pool.query(
+      `SELECT lp.*, u.name AS owner_name
+       FROM lost_pets lp
+       LEFT JOIN users u ON lp.user_id = u.id
+       WHERE ${conditions.join(' AND ')}
+       ORDER BY lp.created_at DESC
+       LIMIT $${idx++} OFFSET $${idx}`,
+      values
+    );
+    return rows;
+  }
+
   static async findByRadius({ lat, lng, radiusKm = 5, type, color, breed, limit = 20, offset = 0 }) {
     const conditions = [
       "lp.status = 'lost'",

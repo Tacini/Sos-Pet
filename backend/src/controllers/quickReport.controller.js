@@ -1,5 +1,14 @@
 const QuickReportModel = require('../models/quickReport.model');
-const path = require('path');
+
+function parseContactMethods(raw) {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 class QuickReportController {
   static async create(req, res, next) {
@@ -11,25 +20,21 @@ class QuickReportController {
         });
       }
 
-      const photoUrl = `/uploads/${req.file.filename}`;
-
       const reportData = {
-        locationText: req.body.location_text,
+        location_text: req.body.location_text,
         latitude: req.body.latitude ? parseFloat(req.body.latitude) : null,
         longitude: req.body.longitude ? parseFloat(req.body.longitude) : null,
         city: req.body.city,
         neighborhood: req.body.neighborhood,
-        photoUrl,
-        reporterName: req.body.reporter_name,
-        reporterPhone: req.body.reporter_phone,
-        acceptsContact: req.body.accepts_contact === 'true',
-        contactMethods: req.body.contact_methods
-          ? JSON.parse(req.body.contact_methods)
-          : [],
-        wantsUpdates: req.body.wants_updates === 'true',
-        reporterEmail: req.body.reporter_email,
-        animalType: req.body.animal_type,
-        animalColor: req.body.animal_color,
+        photo_url: `/uploads/${req.file.filename}`,
+        reporter_name: req.body.reporter_name,
+        reporter_phone: req.body.reporter_phone,
+        accepts_contact: req.body.accepts_contact === 'true',
+        contact_methods: parseContactMethods(req.body.contact_methods),
+        wants_updates: req.body.wants_updates === 'true',
+        reporter_email: req.body.reporter_email,
+        animal_type: req.body.animal_type,
+        animal_color: req.body.animal_color,
         description: req.body.description,
       };
 
@@ -47,17 +52,18 @@ class QuickReportController {
 
   static async list(req, res, next) {
     try {
-      const { limit = 20, page = 1, animal_type, city } = req.query;
+      const { limit = 20, page = 1, city } = req.query;
+      const animal_type = req.query.animal_type || req.query.type;
       const offset = (parseInt(page) - 1) * parseInt(limit);
 
       const [reports, total] = await Promise.all([
         QuickReportModel.findAll({
           limit: parseInt(limit),
           offset,
-          animalType: animal_type,
+          animal_type,
           city,
         }),
-        QuickReportModel.countAll({ animalType: animal_type, city }),
+        QuickReportModel.countAll({ animal_type, city }),
       ]);
 
       res.json({

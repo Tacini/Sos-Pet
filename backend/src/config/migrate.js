@@ -88,17 +88,17 @@ const migrations = `
   DROP TRIGGER IF EXISTS update_users_updated_at ON users;
   CREATE TRIGGER update_users_updated_at
     BEFORE UPDATE ON users
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
   DROP TRIGGER IF EXISTS update_quick_reports_updated_at ON quick_reports;
   CREATE TRIGGER update_quick_reports_updated_at
     BEFORE UPDATE ON quick_reports
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
   DROP TRIGGER IF EXISTS update_lost_pets_updated_at ON lost_pets;
   CREATE TRIGGER update_lost_pets_updated_at
     BEFORE UPDATE ON lost_pets
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 `;
 
 async function migrate() {

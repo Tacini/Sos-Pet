@@ -1,144 +1,158 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { Upload, X, CheckCircle, PawPrint, MapPin } from 'lucide-react';
+import { Upload, X, CheckCircle, PawPrint } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+
 import { petService } from '../services';
 import { useAuth } from '../context/AuthContext';
 import { Button, Input, Textarea } from '../components/ui';
+import LocationPicker from '../components/map/LocationPicker';
 import styles from './LostPetForm.module.css';
+import {
+  getCurrentLocationAndAddress,
+  reverseGeocode,
+  getGeolocationErrorMessage,
+  STANDARDIZED_COLORS,
+  EMPTY_ADDRESS,
+} from '../utils/geolocationUtils';
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
-
-const CORES  = ['Preto', 'Branco', 'Caramelo', 'Cinza', 'Marrom', 'Amarelo', 'Mesclado', 'Rajado'];
 const IDADES = ['Até 1 ano', '1 a 3 anos', '3 a 6 anos', '7 a 10 anos', '11 a 14 anos', '15 anos ou mais'];
-const RACAS  = {
-  dog: ['Vira-lata', 'Labrador', 'Golden Retriever', 'Poodle', 'Bulldog', 'Pastor Alemão', 'Shih Tzu', 'Outro'],
-  cat: ['Vira-lata', 'Siamês', 'Persa', 'Maine Coon', 'Angorá', 'Bengal', 'Ragdoll', 'Outro'],
+
+const BREEDS_BY_TYPE = {
+  dog:   ['SRD', 'Poodle', 'Pinscher', 'Labrador', 'Golden Retriever', 'Pastor Alemão', 'Bulldog', 'Beagle', 'Shih Tzu', 'Yorkshire', 'Outro'],
+  cat:   ['SRD', 'Siamês', 'Persa', 'Maine Coon', 'Angorá', 'Bengal', 'Ragdoll', 'Sphynx', 'Munchkin', 'Outro'],
+  other: ['Outro'],
 };
-
-// Captura cliques e centraliza no marcador
-function MapController({ coords, onMapClick }) {
-  const map = useMap();
-  useMapEvents({
-    click(e) { onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng }); },
-  });
-  if (coords) map.setView([coords.lat, coords.lng]);
-  return null;
-}
-
-// Componente do mapa isolado para evitar problemas de re-render
-function LeafletMap({ coords, onMapClick, onMapReady }) {
-  return (
-    <MapContainer
-      center={[-23.55, -46.63]}
-      zoom={13}
-      className={styles.map}
-      whenReady={onMapReady}
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
-      />
-      <MapController coords={coords} onMapClick={onMapClick} />
-      {coords && <Marker position={[coords.lat, coords.lng]} />}
-    </MapContainer>
-  );
-}
 
 export default function LostPetForm() {
   const { user } = useAuth();
   const navigate  = useNavigate();
   const fileInputRef = useRef();
-  const leafletMap   = useRef(null);
 
-  const [photos, setPhotos]         = useState([]);
-  const [previews, setPreviews]     = useState([]);
-  const [submitted, setSubmitted]   = useState(false);
-  const [animalType, setAnimalType] = useState('');
-  const [outroTipo, setOutroTipo]   = useState('');
+  const [photos, setPhotos]       = useState([]);
+  const [previews, setPreviews]   = useState([]);
+  const [submitted, setSubmitted] = useState(false);
+  const [locating, setLocating]   = useState(false);
+
+  const [animalType, setAnimalType] = useState('dog');
   const [coresSel, setCoresSel]     = useState([]);
   const [racasSel, setRacasSel]     = useState([]);
-  const [outraRaca, setOutraRaca]   = useState('');
   const [idadeSel, setIdadeSel]     = useState('');
-  const [mapCoords, setMapCoords]   = useState(null);
+
+  const [mapCoords, setMapCoords] = useState({ lat: -23.55052, lng: -46.633308 });
+  const [address, setAddress]     = useState({ ...EMPTY_ADDRESS });
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
-    defaultValues: { contact_email: user?.email || '' },
+    defaultValues: { contact_email: user?.email || '', name: '', description: '', contact_phone: '', reward_info: '' },
   });
 
-  const useMyLocation = () => {
-    if (!navigator.geolocation) { toast.error('Geolocalização não suportada.'); return; }
-    navigator.geolocation.getCurrentPosition(({ coords }) => {
-      const pos = { lat: coords.latitude, lng: coords.longitude };
-      setMapCoords(pos);
-      if (leafletMap.current) leafletMap.current.setView([pos.lat, pos.lng], 15);
-      toast.success('Localização obtida!');
-    }, () => toast.error('Não foi possível obter sua localização.'));
+  useEffect(() => { setRacasSel([]); }, [animalType]);
+
+  useEffect(() => () => { previews.forEach((url) => URL.revokeObjectURL(url)); }, [previews]);
+
+  // ── Localização ───────────────────────────────────────────────────────────
+  const applyLocation = (data) => {
+    setMapCoords({ lat: data.latitude, lng: data.longitude });
+    setAddress({
+      logradouro: data.logradouro || '',
+      numero: data.numero || '',
+      bairro: data.bairro || '',
+      city: data.city || '',
+      estado: data.estado || '',
+      cep: data.cep || '',
+    });
   };
 
-  const toggleCor = (cor) =>
-    setCoresSel((prev) => prev.includes(cor) ? prev.filter((c) => c !== cor) : [...prev, cor]);
-
-  const toggleRaca = (raca) => {
-    if (racasSel.includes(raca)) {
-      setRacasSel((prev) => prev.filter((r) => r !== raca));
-      if (raca === 'Outro') setOutraRaca('');
-    } else {
-      if (racasSel.length >= 3) { toast('Máximo de 3 raças.', { icon: '⚠️' }); return; }
-      setRacasSel((prev) => [...prev, raca]);
+  const handleUseMyLocation = async () => {
+    setLocating(true);
+    try {
+      const data = await getCurrentLocationAndAddress();
+      applyLocation(data);
+      toast.success(data.displayName ? `Localização: ${data.displayName}` : 'Coordenadas obtidas!');
+    } catch (err) {
+      toast.error(getGeolocationErrorMessage(err));
+    } finally {
+      setLocating(false);
     }
   };
 
+  const handlePositionChange = async ({ lat, lng }) => {
+    setLocating(true);
+    try {
+      const data = await reverseGeocode(lat, lng);
+      applyLocation(data);
+    } catch {
+      setMapCoords({ lat, lng });
+    } finally {
+      setLocating(false);
+    }
+  };
+
+  // ── Toggles ───────────────────────────────────────────────────────────────
+  const toggleCor = (label) =>
+    setCoresSel((prev) => prev.includes(label) ? prev.filter((c) => c !== label) : [...prev, label]);
+
+  const toggleRaca = (raca) => {
+    if (!racasSel.includes(raca) && racasSel.length >= 3) { toast('Máximo 3 raças.', { icon: '⚠️' }); return; }
+    setRacasSel((prev) => prev.includes(raca) ? prev.filter((r) => r !== raca) : [...prev, raca]);
+  };
+
+  // ── Fotos ─────────────────────────────────────────────────────────────────
   const handlePhotos = (e) => {
-    const files = Array.from(e.target.files || []);
-    const valid = files.filter((f) => f.size <= 5 * 1024 * 1024);
-    if (valid.length < files.length) toast.error('Algumas fotos foram ignoradas (máx. 5MB cada).');
+    const files   = Array.from(e.target.files || []);
+    const valid   = files.filter((f) => f.size <= 5 * 1024 * 1024);
     const combined = [...photos, ...valid].slice(0, 5);
+    previews.forEach((url) => URL.revokeObjectURL(url));
     setPhotos(combined);
     setPreviews(combined.map((f) => URL.createObjectURL(f)));
   };
 
   const removePhoto = (i) => {
+    URL.revokeObjectURL(previews[i]);
     const next = photos.filter((_, idx) => idx !== i);
+    const nextPreviews = previews.filter((_, idx) => idx !== i);
     setPhotos(next);
-    setPreviews(next.map((f) => URL.createObjectURL(f)));
+    setPreviews(nextPreviews);
   };
 
+  // ── Submit ────────────────────────────────────────────────────────────────
   const onSubmit = async (data) => {
-    if (!animalType) { toast.error('Selecione o tipo do animal.'); return; }
-    if (animalType === 'other' && !outroTipo.trim()) { toast.error('Descreva o tipo do animal.'); return; }
-    if (coresSel.length === 0) { toast.error('Selecione ao menos uma cor.'); return; }
+    if (photos.length === 0)    { toast.error('Adicione ao menos uma foto.'); return; }
+    if (!animalType)             { toast.error('Selecione o tipo do animal.'); return; }
+    if (coresSel.length === 0)  { toast.error('Selecione ao menos uma cor.'); return; }
 
-    const racasFinais = racasSel.map((r) => r === 'Outro' ? outraRaca.trim() : r).filter(Boolean);
+    const fullLoc = [
+      address.logradouro,
+      address.numero ? `nº ${address.numero}` : '',
+      address.bairro,
+      address.city,
+      address.estado,
+    ].filter(Boolean).join(', ') || `${mapCoords.lat.toFixed(5)}, ${mapCoords.lng.toFixed(5)}`;
 
     const formData = new FormData();
     photos.forEach((f) => formData.append('photos', f));
-    Object.entries(data).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== '') formData.append(k, v);
-    });
-    formData.append('type',  animalType === 'other' ? outroTipo.trim() : animalType);
-    formData.append('color', coresSel.join(', '));
-    if (racasFinais.length) formData.append('breed', racasFinais.join(', '));
-    if (idadeSel) formData.append('approximate_age', idadeSel);
-    if (mapCoords) {
-      formData.append('last_seen_latitude',  String(mapCoords.lat));
-      formData.append('last_seen_longitude', String(mapCoords.lng));
-    }
+
+    formData.append('name',                 data.name);
+    formData.append('type',                 animalType);
+    formData.append('color',                coresSel.join(', '));
+    formData.append('breed',                racasSel.join(', '));
+    formData.append('approximate_age',      idadeSel);
+    formData.append('last_seen_location',   fullLoc);
+    formData.append('last_seen_latitude',   String(mapCoords.lat));
+    formData.append('last_seen_longitude',  String(mapCoords.lng));
+    formData.append('city',                 address.city);
+    formData.append('neighborhood',         address.bairro);
+    formData.append('description',          data.description);
+    formData.append('contact_phone',        data.contact_phone);
+    formData.append('contact_email',        data.contact_email);
+    formData.append('reward_info',          data.reward_info);
 
     try {
       await petService.create(formData);
       setSubmitted(true);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Erro ao criar anúncio. Tente novamente.');
+      toast.error(err.response?.data?.message || 'Erro ao criar anúncio.');
     }
   };
 
@@ -148,7 +162,7 @@ export default function LostPetForm() {
         <div className={styles.successCard}>
           <CheckCircle size={64} className={styles.successIcon} />
           <h2 className={styles.successTitle}>Anúncio criado!</h2>
-          <p className={styles.successDesc}>Seu anúncio está no ar. Torçemos para que seu pet volte logo para casa. 🏠</p>
+          <p className={styles.successDesc}>Seu anúncio está no ar. Torçemos para que seu pet volte logo! 🏠</p>
           <div className={styles.successActions}>
             <Button variant="primary" onClick={() => navigate('/busca')}>Ver anúncios</Button>
             <Button variant="outline" onClick={() => navigate('/meu-pet')}>Meus anúncios</Button>
@@ -172,20 +186,17 @@ export default function LostPetForm() {
           {/* ── Fotos ── */}
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>📷 Fotos do animal</h2>
-            <p className={styles.sectionDesc}>Adicione até 5 fotos. Quanto mais, melhor!</p>
+            <p className={styles.sectionDesc}>Adicione até 5 fotos.</p>
             <div className={styles.photoGrid}>
               {previews.map((src, i) => (
                 <div key={i} className={styles.photoThumb}>
                   <img src={src} alt={`Foto ${i + 1}`} />
-                  <button type="button" onClick={() => removePhoto(i)} className={styles.removeBtn}>
-                    <X size={14} />
-                  </button>
+                  <button type="button" onClick={() => removePhoto(i)} className={styles.removeBtn}><X size={14} /></button>
                 </div>
               ))}
               {photos.length < 5 && (
                 <div className={styles.addPhoto} onClick={() => fileInputRef.current?.click()}>
-                  <Upload size={24} />
-                  <span>Adicionar foto</span>
+                  <Upload size={24} /><span>Adicionar</span>
                 </div>
               )}
             </div>
@@ -196,68 +207,42 @@ export default function LostPetForm() {
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>🐾 Dados do animal</h2>
 
-            <Input
-              label="Nome do animal *"
-              placeholder="ex: Bolinha"
-              error={errors.name?.message}
-              {...register('name', { required: 'Nome é obrigatório' })}
-            />
+            <Input label="Nome do animal *" placeholder="ex: Bolinha" error={errors.name?.message}
+              {...register('name', { required: 'Nome é obrigatório' })} />
 
             {/* Tipo */}
             <div className={styles.fieldGroup}>
               <label className={styles.fieldLabel}>Tipo *</label>
               <div className={styles.radioRow}>
-                {[
-                  { value: 'dog',   label: '🐕 Cachorro' },
-                  { value: 'cat',   label: '🐈 Gato'     },
-                  { value: 'other', label: '🐾 Outro'    },
-                ].map(({ value, label }) => (
-                  <label key={value} className={`${styles.radioChip} ${animalType === value ? styles.radioChipActive : ''}`}>
-                    <input type="radio" name="type_radio" value={value} checked={animalType === value}
-                      onChange={() => { setAnimalType(value); setRacasSel([]); setOutroTipo(''); setOutraRaca(''); }} />
-                    {label}
-                  </label>
+                {[{ v: 'dog', l: '🐕 Cachorro' }, { v: 'cat', l: '🐈 Gato' }, { v: 'other', l: '🐾 Outro' }].map(({ v, l }) => (
+                  <button type="button" key={v}
+                    className={`${styles.radioChip} ${animalType === v ? styles.radioChipActive : ''}`}
+                    onClick={() => setAnimalType(v)}>{l}</button>
                 ))}
               </div>
-              {animalType === 'other' && (
-                <input className={styles.outroInput} type="text" autoFocus
-                  placeholder="Qual animal? ex: Coelho, Hamster, Pássaro..."
-                  value={outroTipo} onChange={(e) => setOutroTipo(e.target.value)} />
-              )}
             </div>
 
             {/* Raça */}
-            {RACAS[animalType] && (
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>
-                  Raça <span className={styles.fieldHint}>· selecione até 3</span>
-                </label>
-                {racasSel.length >= 3 && <p className={styles.limitWarning}>⚠️ Máximo de 3 raças atingido</p>}
-                <div className={styles.checkGrid}>
-                  {RACAS[animalType].map((raca) => (
-                    <label key={raca} className={`${styles.checkChip} ${racasSel.includes(raca) ? styles.checkChipActive : ''}`}>
-                      <input type="checkbox" checked={racasSel.includes(raca)} onChange={() => toggleRaca(raca)} />
-                      {raca}
-                    </label>
-                  ))}
-                </div>
-                {racasSel.includes('Outro') && (
-                  <input className={styles.outroInput} type="text" autoFocus
-                    placeholder="Qual a raça? ex: Akita, Sphynx..."
-                    value={outraRaca} onChange={(e) => setOutraRaca(e.target.value)} />
-                )}
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel}>Raça <span className={styles.fieldHint}>· até 3</span></label>
+              {racasSel.length >= 3 && <p className={styles.limitWarning}>⚠️ Máximo de 3 raças atingido</p>}
+              <div className={styles.checkGrid}>
+                {BREEDS_BY_TYPE[animalType].map((b) => (
+                  <button type="button" key={b}
+                    className={`${styles.checkChip} ${racasSel.includes(b) ? styles.checkChipActive : ''}`}
+                    onClick={() => toggleRaca(b)}>{b}</button>
+                ))}
               </div>
-            )}
+            </div>
 
             {/* Cor */}
             <div className={styles.fieldGroup}>
               <label className={styles.fieldLabel}>Cor(es) *</label>
               <div className={styles.checkGrid}>
-                {CORES.map((cor) => (
-                  <label key={cor} className={`${styles.checkChip} ${coresSel.includes(cor) ? styles.checkChipActive : ''}`}>
-                    <input type="checkbox" checked={coresSel.includes(cor)} onChange={() => toggleCor(cor)} />
-                    {cor}
-                  </label>
+                {STANDARDIZED_COLORS.map((c) => (
+                  <button type="button" key={c.id}
+                    className={`${styles.checkChip} ${coresSel.includes(c.label) ? styles.checkChipActive : ''}`}
+                    onClick={() => toggleCor(c.label)}>{c.label}</button>
                 ))}
               </div>
             </div>
@@ -267,58 +252,50 @@ export default function LostPetForm() {
               <label className={styles.fieldLabel}>Idade aproximada</label>
               <div className={styles.checkGrid}>
                 {IDADES.map((idade) => (
-                  <label key={idade} className={`${styles.checkChip} ${idadeSel === idade ? styles.checkChipActive : ''}`}>
-                    <input type="checkbox" checked={idadeSel === idade}
-                      onChange={() => setIdadeSel(idadeSel === idade ? '' : idade)} />
-                    {idade}
-                  </label>
+                  <button type="button" key={idade}
+                    className={`${styles.checkChip} ${idadeSel === idade ? styles.checkChipActive : ''}`}
+                    onClick={() => setIdadeSel(idadeSel === idade ? '' : idade)}>{idade}</button>
                 ))}
               </div>
             </div>
 
-            <Textarea
-              label="Descrição"
-              placeholder="Detalhes que ajudem a identificar o animal: manchas, coleira, comportamento, microchip..."
-              rows={4}
-              {...register('description')}
-            />
+            <Textarea label="Descrição" placeholder="Manchas, coleira, microchip, comportamento..."
+              rows={4} {...register('description')} />
           </section>
 
           {/* ── Localização ── */}
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>📍 Último local visto</h2>
 
-            <Textarea
-              label="Endereço / Descrição do local *"
-              placeholder="ex: Rua das Flores, 123, próximo ao parque, Jardim Europa, São Paulo"
-              rows={3}
-              error={errors.last_seen_location?.message}
-              {...register('last_seen_location', { required: 'Local é obrigatório' })}
-            />
-
-            <div className={styles.grid}>
-              <Input label="Cidade" placeholder="São Paulo" {...register('city')} />
-              <Input label="Bairro" placeholder="Jardim Europa" {...register('neighborhood')} />
-            </div>
-
             {/* Mapa */}
             <div className={styles.mapWrap}>
-              <div className={styles.mapHeader}>
-                <p className={styles.mapLabel}>📌 Clique no mapa para marcar o local</p>
-                <button type="button" className={styles.locationBtn} onClick={useMyLocation}>
-                  <MapPin size={14} /> Usar minha localização
-                </button>
-              </div>
-              <LeafletMap
-                coords={mapCoords}
-                onMapClick={setMapCoords}
-                onMapReady={(map) => { leafletMap.current = map.target; }}
+              <LocationPicker
+                lat={mapCoords.lat}
+                lng={mapCoords.lng}
+                address={address}
+                locating={locating}
+                active
+                onUseMyLocation={handleUseMyLocation}
+                onPositionChange={handlePositionChange}
               />
-              {mapCoords && (
-                <p className={styles.coordsInfo}>
-                  ✅ Local marcado · {mapCoords.lat.toFixed(5)}, {mapCoords.lng.toFixed(5)}
-                </p>
-              )}
+            </div>
+
+            {/* Endereço estruturado */}
+            <div className={styles.fieldGroup}>
+              <div className={styles.grid}>
+                <Input label="Logradouro" placeholder="Rua das Flores" value={address.logradouro}
+                  onChange={(e) => setAddress({ ...address, logradouro: e.target.value })} />
+                <Input label="Número" placeholder="123" value={address.numero}
+                  onChange={(e) => setAddress({ ...address, numero: e.target.value })} />
+              </div>
+              <div className={styles.grid}>
+                <Input label="Bairro" placeholder="Jardim Europa" value={address.bairro}
+                  onChange={(e) => setAddress({ ...address, bairro: e.target.value })} />
+                <Input label="Cidade" placeholder="São Paulo" value={address.city}
+                  onChange={(e) => setAddress({ ...address, city: e.target.value })} />
+              </div>
+              <Input label="Estado" placeholder="SP" value={address.estado}
+                onChange={(e) => setAddress({ ...address, estado: e.target.value })} />
             </div>
           </section>
 
@@ -329,11 +306,7 @@ export default function LostPetForm() {
               <Input label="Telefone / WhatsApp" placeholder="(11) 99999-9999" {...register('contact_phone')} />
               <Input label="E-mail de contato" type="email" {...register('contact_email')} />
             </div>
-            <Input
-              label="Informação sobre recompensa (opcional)"
-              placeholder="ex: Recompensa para quem encontrar!"
-              {...register('reward_info')}
-            />
+            <Input label="Recompensa (opcional)" placeholder="ex: Recompensa para quem encontrar!" {...register('reward_info')} />
           </section>
 
           {/* ── Submit ── */}
@@ -341,7 +314,7 @@ export default function LostPetForm() {
             <Button type="submit" variant="primary" size="lg" loading={isSubmitting}>
               Publicar anúncio 🐾
             </Button>
-            <p className={styles.submitNote}>Seu anúncio ficará visível para todos que buscam na plataforma.</p>
+            <p className={styles.submitNote}>Seu anúncio ficará visível para todos na plataforma.</p>
           </div>
         </form>
       </div>

@@ -99,3 +99,30 @@ input, textarea, select {
 
 .animate-fade-up  { animation: fadeUp 0.5s ease both; }
 .animate-fade-in  { animation: fadeIn 0.4s ease both; }
+
+/* Marcadores do mapa de busca */
+.user-dot-pulse {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
+}
+
+.map-pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 2.5px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+.map-pin-lost {
+  background: var(--terra, #c4622d);
+}
+
+.map-pin-avistado {
+  background: var(--forest, #2d5016);
+}

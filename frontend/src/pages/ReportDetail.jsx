@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { reportService } from '../services';
 import { Badge, Spinner } from '../components/ui';
+import { parseContactMethods } from '../utils/photoUtils';
 import styles from './DetailPage.module.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -39,9 +40,7 @@ export default function ReportDetail() {
     : `${API_URL}${report.photo_url}`;
 
   const timeAgo = formatDistanceToNow(new Date(report.created_at), { addSuffix: true, locale: ptBR });
-  const contactMethods = typeof report.contact_methods === 'string'
-    ? JSON.parse(report.contact_methods || '[]')
-    : report.contact_methods || [];
+  const contactMethods = parseContactMethods(report.contact_methods);
 
   return (
     <div className={styles.page}>
@@ -58,7 +57,7 @@ export default function ReportDetail() {
           <div className={styles.photoSection}>
             <div className={styles.mainPhoto}>
               {report.photo_url ? (
-                <img src={photoSrc} alt="Animal visto" />
+                <img src={photoSrc} alt="Animal avistado" />
               ) : (
                 <div className={styles.noPhoto}>🐾</div>
               )}
@@ -68,14 +67,14 @@ export default function ReportDetail() {
                     {TYPE_LABELS[report.animal_type] || report.animal_type}
                   </Badge>
                 )}
-                <Badge variant="forest">Visto</Badge>
+                <Badge variant="forest">Avistado</Badge>
               </div>
             </div>
           </div>
 
           {/* ── Informações ── */}
           <div className={styles.info}>
-            <h1 className={styles.name}>Animal Visto</h1>
+            <h1 className={styles.name}>Animal Avistado</h1>
 
             <div className={styles.tags}>
               {report.animal_color && <span className={styles.tag}>{report.animal_color}</span>}
@@ -90,7 +89,7 @@ export default function ReportDetail() {
             )}
 
             <div className={styles.card}>
-              <h3 className={styles.cardTitle}>Onde foi visto</h3>
+              <h3 className={styles.cardTitle}>Onde foi avistado</h3>
               <div className={styles.infoRow}>
                 <MapPin size={16} className={styles.infoIcon} />
                 <span>{report.location_text}</span>

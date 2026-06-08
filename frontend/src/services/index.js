@@ -13,6 +13,11 @@ export const searchService = {
   search: (params) => api.get('/search', { params }),
 };
 
+// ── Geocode ───────────────────────────────────────────────────────────────────
+export const geocodeService = {
+  reverse: (lat, lng) => api.get('/geocode/reverse', { params: { lat, lng } }),
+};
+
 // ── Quick Reports ─────────────────────────────────────────────────────────────
 export const reportService = {
   create: (formData) =>

@@ -7,13 +7,14 @@ import toast from 'react-hot-toast';
 import { petService } from '../services';
 import { useAuth } from '../context/AuthContext';
 import { Button, Badge, Spinner, Empty } from '../components/ui';
+import { parsePhotos } from '../utils/photoUtils';
 import styles from './MyPets.module.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const STATUS_CONFIG = {
   lost:   { label: 'Perdido',    variant: 'terra',   icon: Clock },
-  found:  { label: 'visto', variant: 'forest',  icon: CheckCircle },
+  found:  { label: 'Encontrado', variant: 'forest',  icon: CheckCircle },
   closed: { label: 'Encerrado',  variant: 'default', icon: XCircle },
 };
 
@@ -76,7 +77,8 @@ export default function MyPets() {
           <div className={styles.list}>
             {pets.map((pet) => {
               const cfg    = STATUS_CONFIG[pet.status] || STATUS_CONFIG.lost;
-              const photo  = pet.photos?.[0];
+              const photoList = parsePhotos(pet.photos);
+              const photo  = photoList[0];
               const photoSrc = photo?.startsWith('http') ? photo : `${API_URL}${photo}`;
               const timeAgo  = formatDistanceToNow(new Date(pet.created_at), { addSuffix: true, locale: ptBR });
 
